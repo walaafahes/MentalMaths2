@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIG Maths">
+<title>SIG Mental Maths</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --text2: #888;
+    --text3: #555;
+    --amber: #f5a623;
+    --green: #00d084;
+    --red: #ff4757;
+    --blue: #4ecdc4;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --nav-h: 58px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  #app {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    bottom: var(--nav-h);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .screen.active { opacity: 1; pointer-events: all; }
+  /* Game and results screens sit above nav */
+  #screen-game, #screen-results, #screen-mixed {
+    bottom: 0;
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text3);
+    transition: color 0.15s;
+    padding-bottom: 4px;
+  }
+  .nav-btn.active { color: var(--amber); }
+  .nav-btn svg { width: 20px; height: 20px; }
+  .nav-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── MENU ── */
+  .menu-header {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .menu-logo {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--amber);
+  }
+  .menu-logo span { color: var(--text3); font-weight: 300; }
+  .menu-subtitle {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 2px;
+  }
+
+  .diff-bar {
+    display: flex;
+    gap: 6px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .diff-btn {
+    flex: 1;
+    padding: 9px 0;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .diff-btn.active {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(245,166,35,0.08);
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+    padding: 14px 20px 8px;
+  }
+
+  .mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 14px;
+  }
+
+  .mode-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card:active { transform: scale(0.98); }
+  .mode-card.mixed {
+    border-color: rgba(245,166,35,0.3);
+    background: rgba(245,166,35,0.04);
+    margin-top: 4px;
+  }
+  .mode-num { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 18px; }
+  .mode-icon { font-size: 18px; min-width: 26px; text-align: center; }
+  .mode-info { flex: 1 }
+  .mode-name { font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.2; }
+  .mode-desc { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .mode-tier { font-family: var(--mono); font-size: 9px; padding: 3px 7px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; }
+  .tier1 { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .tier2 { background: rgba(78,205,196,0.12); color: var(--blue); }
+
+  /* ── PERFORMANCE SCREEN ── */
+  .perf-header {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .perf-title {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .perf-clear {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red);
+    background: none;
+    border: 1px solid rgba(255,71,87,0.3);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+
+  /* Overall summary strip */
+  .overall-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .overall-cell {
+    padding: 14px 0;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .overall-cell:last-child { border-right: none; }
+  .overall-val {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+  .overall-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Mode tabs */
+  .perf-mode-tabs {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex-shrink: 0;
+  }
+  .perf-mode-tabs::-webkit-scrollbar { display: none; }
+  .perf-tab {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+  .perf-tab.active {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+  }
+
+  /* Mode detail panel */
+  .perf-detail { padding: 14px; flex: 1; }
+
+  .perf-no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 10px;
+  }
+  .perf-no-data-icon { font-size: 32px; opacity: 0.3; }
+  .perf-no-data-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  /* Stats cards row */
+  .perf-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .perf-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .perf-stat-val {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+  .perf-stat-lbl {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text3);
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Chart */
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 14px 10px;
+    margin-bottom: 14px;
+  }
+  .chart-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .chart-area {
+    position: relative;
+    height: 90px;
+    width: 100%;
+  }
+  .chart-svg { width: 100%; height: 100%; overflow: visible; }
+  .chart-x-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .chart-x-lbl {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text3);
+  }
+  .chart-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text2);
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Session history table */
+  .history-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .history-header {
+    display: grid;
+    grid-template-columns: 28px 1fr 52px 52px 52px;
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .history-col-hdr {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: var(--text3);
+    text-transform: uppercase;
+    text-align: right;
+  }
+  .history-col-hdr:first-child { text-align: left; }
+  .history-col-hdr:nth-child(2) { text-align: left; }
+  .history-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 52px 52px 52px;
+    gap: 4px;
+    padding: 9px 12px;
+    border-bottom: 1px solid rgba(42,42,42,0.5);
+    align-items: center;
+    transition: background 0.1s;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-row:nth-child(even) { background: rgba(255,255,255,0.01); }
+  .history-cell {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .history-cell:first-child { color: var(--text3); text-align: left; font-size: 10px; }
+  .history-cell:nth-child(2) { text-align: left; }
+  .history-score {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--amber);
+    text-align: right;
+  }
+  .diff-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 8px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .diff-easy { background: rgba(0,208,132,0.12); color: var(--green); }
+  .diff-medium { background: rgba(245,166,35,0.12); color: var(--amber); }
+  .diff-hard { background: rgba(255,71,87,0.12); color: var(--red); }
+
+  /* Personal bests strip */
+  .pb-strip {
+    background: var(--surface);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .pb-strip-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .pb-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .pb-item { text-align: center; flex: 1; }
+  .pb-val {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+  .pb-lbl {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text3);
+    margin-top: 3px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── MIXED SELECT ── */
+  .mixed-header {
+    padding: 18px 20px 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+  }
+  .mixed-title { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--text); }
+  .mixed-list { padding: 10px 14px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+  .mixed-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mixed-item.selected { border-color: var(--amber); background: rgba(245,166,35,0.06); }
+  .mixed-item.selected .mixed-check { color: var(--amber); }
+  .mixed-check { font-size: 18px; color: var(--border); transition: color 0.15s; }
+  .mixed-start-wrap { padding: 14px; border-top: 1px solid var(--border); }
+
+  .big-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 10px;
+    border: none;
+    background: var(--amber);
+    color: #000;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .big-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .big-btn:disabled { opacity: 0.35; pointer-events: none; }
+  .big-btn.secondary {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text2);
+  }
+
+  /* ── GAME ── */
+  .game-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .game-back {
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 6px;
+    line-height: 1;
+  }
+  .timer-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .timer-num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .timer-num.urgent { color: var(--red); }
+  .timer-bar-bg { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+  .timer-bar-fill { height: 100%; background: var(--amber); border-radius: 2px; transition: width 1s linear, background 0.3s; }
+  .timer-bar-fill.urgent { background: var(--red); }
+  .score-wrap { text-align: right; min-width: 60px; }
+  .score-num { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--green); line-height: 1; }
+  .score-sub { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 1px; }
+
+  .game-mode-tag {
+    text-align: center;
+    padding: 7px 16px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .question-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px 16px;
+    min-height: 100px;
+  }
+  .question-text {
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+  }
+  .question-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .answer-area { padding: 0 16px 10px; flex-shrink: 0; }
+  .answer-input-wrap { position: relative; margin-bottom: 8px; }
+  .answer-input {
+    width: 100%;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .answer-input:focus { border-color: var(--amber); }
+  .answer-input.correct { border-color: var(--green); background: rgba(0,208,132,0.05); }
+  .answer-input.wrong { border-color: var(--red); background: rgba(255,71,87,0.05); }
+
+  .feedback-row { height: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
+  .feedback-text { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.5px; transition: color 0.2s; }
+  .feedback-text.correct { color: var(--green); }
+  .feedback-text.wrong { color: var(--red); }
+
+  .btn-row { display: flex; gap: 8px; }
+  .show-btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .show-btn:active { opacity: 0.7; }
+  .q-counter { text-align: center; font-family: var(--mono); font-size: 10px; color: var(--text3); padding: 5px 0 10px; letter-spacing: 1px; }
+
+  /* Numpad */
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 16px 8px; flex-shrink: 0; }
+  .np-btn {
+    padding: 14px 0;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .np-btn:active { transform: scale(0.94); background: var(--surface2); border-color: var(--amber); }
+  .np-btn.special { color: var(--text2); font-size: 18px; }
+  .np-btn.submit-np { background: var(--amber); border-color: var(--amber); color: #000; font-weight: 700; }
+
+  /* ── RESULTS ── */
+  .results-screen { padding: 24px 20px; flex: 1; overflow-y: auto; }
+  .results-title { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; color: var(--text3); text-transform: uppercase; margin-bottom: 6px; }
+  .results-score { font-family: var(--mono); font-size: 52px; font-weight: 700; color: var(--amber); line-height: 1; margin-bottom: 4px; }
+  .results-score span { font-size: 20px; color: var(--text3); font-weight: 400; }
+  .results-meta { font-family: var(--mono); font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+  .results-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .result-stat { padding: 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+  .result-stat-val { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text); line-height: 1; }
+  .result-stat-lbl { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 4px; letter-spacing: 0.5px; }
+  .results-btns { display: flex; flex-direction: column; gap: 8px; padding-bottom: 24px; }
+
+  /* Animations */
+  @keyframes pop-in { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .pop { animation: pop-in 0.2s cubic-bezier(.34,1.56,.64,1); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════ MENU SCREEN ══════════ -->
+  <div class="screen active" id="screen-menu">
+    <div class="menu-header">
+      <div>
+        <div class="menu-logo">SIG<span>/</span>MATHS</div>
+        <div class="menu-subtitle">Trading Prep · Mental Arithmetic</div>
+      </div>
+    </div>
+    <div class="diff-bar">
+      <button class="diff-btn active" onclick="setDiff(this,'easy')">EASY</button>
+      <button class="diff-btn" onclick="setDiff(this,'medium')">MEDIUM</button>
+      <button class="diff-btn" onclick="setDiff(this,'hard')">HARD</button>
+    </div>
+    <div class="section-label">DRILL MODES</div>
+    <div class="mode-grid" id="mode-grid"></div>
+    <div style="height:18px"></div>
+  </div>
+
+  <!-- ══════════ PERFORMANCE SCREEN ══════════ -->
+  <div class="screen" id="screen-perf">
+    <div class="perf-header">
+      <div class="perf-title">PERFORMANCE</div>
+      <button class="perf-clear" onclick="clearAllStats()">CLEAR ALL</button>
+    </div>
+    <!-- Overall summary -->
+    <div class="overall-strip" id="overall-strip">
+      <div class="overall-cell"><div class="overall-val" id="ov-sessions">0</div><div class="overall-lbl">SESSIONS</div></div>
+      <div class="overall-cell"><div class="overall-val" id="ov-acc">—</div><div class="overall-lbl">ACCURACY</div></div>
+      <div class="overall-cell"><div class="overall-val" id="ov-avg">—</div><div class="overall-lbl">AVG TIME</div></div>
+    </div>
+    <!-- Mode tabs -->
+    <div class="perf-mode-tabs" id="perf-tabs"></div>
+    <!-- Detail for selected mode -->
+    <div class="perf-detail" id="perf-detail"></div>
+  </div>
+
+  <!-- ══════════ MIXED SELECT SCREEN ══════════ -->
+  <div class="screen" id="screen-mixed">
+    <div class="mixed-header">
+      <button class="back-btn" onclick="showMainScreen('menu')">←</button>
+      <div class="mixed-title">MIXED MODE</div>
+    </div>
+    <div class="section-label" style="padding-top:10px">SELECT CATEGORIES</div>
+    <div class="mixed-list" id="mixed-list"></div>
+    <div class="mixed-start-wrap">
+      <button class="big-btn" id="mixed-start-btn" onclick="startMixedGame()" disabled>START MIXED GAME</button>
+    </div>
+  </div>
+
+  <!-- ══════════ GAME SCREEN ══════════ -->
+  <div class="screen" id="screen-game">
+    <div class="game-topbar">
+      <button class="game-back" onclick="confirmBack()">←</button>
+      <div class="timer-wrap">
+        <div class="timer-num" id="timer-num">2:00</div>
+        <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>
+      </div>
+      <div class="score-wrap">
+        <div class="score-num" id="score-num">0</div>
+        <div class="score-sub">CORRECT</div>
+      </div>
+    </div>
+    <div class="game-mode-tag" id="game-mode-tag">FRACTION → %</div>
+    <div class="question-area">
+      <div class="question-text" id="question-text">?</div>
+      <div class="question-sub" id="question-sub"></div>
+    </div>
+    <div class="answer-area">
+      <div class="answer-input-wrap">
+        <input class="answer-input" id="answer-input" type="text" inputmode="decimal"
+          placeholder="?" autocomplete="off" autocorrect="off"
+          onkeydown="handleKey(event)" oninput="handleInput()">
+      </div>
+      <div class="feedback-row"><div class="feedback-text" id="feedback-text"></div></div>
+      <div class="btn-row">
+        <button class="show-btn" onclick="showAnswer()">SHOW ANSWER</button>
+        <button class="show-btn" onclick="nextQuestion()" id="next-btn" style="display:none">NEXT →</button>
+      </div>
+    </div>
+    <div class="numpad" id="numpad">
+      <button class="np-btn" onclick="np('7')">7</button>
+      <button class="np-btn" onclick="np('8')">8</button>
+      <button class="np-btn" onclick="np('9')">9</button>
+      <button class="np-btn" onclick="np('4')">4</button>
+      <button class="np-btn" onclick="np('5')">5</button>
+      <button class="np-btn" onclick="np('6')">6</button>
+      <button class="np-btn" onclick="np('1')">1</button>
+      <button class="np-btn" onclick="np('2')">2</button>
+      <button class="np-btn" onclick="np('3')">3</button>
+      <button class="np-btn special" id="np-dot-btn" onclick="np('.')">.</button>
+      <button class="np-btn" onclick="np('0')">0</button>
+      <button class="np-btn special" onclick="npDel()">⌫</button>
+    </div>
+    <div class="q-counter" id="q-counter">Q1</div>
+  </div>
+
+  <!-- ══════════ RESULTS SCREEN ══════════ -->
+  <div class="screen" id="screen-results">
+    <div class="results-screen">
+      <div class="results-title">ROUND COMPLETE</div>
+      <div class="results-score" id="res-score">0 <span>correct</span></div>
+      <div class="results-meta" id="res-meta"></div>
+      <div class="results-stats">
+        <div class="result-stat"><div class="result-stat-val" id="res-acc">—</div><div class="result-stat-lbl">ACCURACY</div></div>
+        <div class="result-stat"><div class="result-stat-val" id="res-avg">—</div><div class="result-stat-lbl">AVG TIME</div></div>
+        <div class="result-stat"><div class="result-stat-val" id="res-skipped">0</div><div class="result-stat-lbl">SKIPPED</div></div>
+        <div class="result-stat"><div class="result-stat-val" id="res-best">—</div><div class="result-stat-lbl">BEST TIME</div></div>
+      </div>
+      <div class="results-btns">
+        <button class="big-btn" onclick="playAgain()">PLAY AGAIN</button>
+        <button class="big-btn secondary" onclick="showMainScreen('menu')">MENU</button>
+        <button class="big-btn secondary" onclick="showMainScreen('perf')">VIEW PERFORMANCE →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ BOTTOM NAV ══════════ -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-menu" onclick="navTo('menu')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span class="nav-lbl">DRILLS</span>
+    </button>
+    <button class="nav-btn" id="nav-perf" onclick="navTo('perf')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span class="nav-lbl">PERFORMANCE</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════════════════
+const MODE_NAMES = [
+  'Fraction → %',
+  '% → Fraction',
+  'Decimal Mult',
+  'Pct Arithmetic',
+  'Ratio / Break-Even',
+  'Expected Value',
+  'Weighted Avg',
+  'Weird Division'
+];
+const MODE_ICONS = ['½','↩','×','%','⚖','EV','∑','÷'];
+const MODE_DESCS = [
+  '1/8 → 12.5%',
+  '62.5% → 5/8',
+  '1.07 × 250',
+  '15% of 240',
+  'Risk 40 win 60',
+  '60%×10 − 40%×5',
+  '80%×100 + 20%×50',
+  '630 ÷ 8'
+];
+const MODE_TIERS = ['tier1','tier1','tier2','tier2','tier1','tier1','tier1','tier2'];
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let difficulty = 'easy';
+let currentMode = null;
+let currentQ = null;
+let gameActive = false;
+let timerInterval = null;
+let timeLeft = 120;
+let score = 0;
+let questionsAsked = 0;
+let skipped = 0;
+let responseTimes = [];
+let questionStartTime = 0;
+let answered = false;
+let shownAnswer = false;
+let lastGameMode = null;
+let lastGameModes = null;
+let mixSelected = [0,1,2,3,4,5,6,7];
+let activeMainScreen = 'menu';
+let activePerfTab = 0;
+
+// ── Persistent storage ──
+// Structure: { sessions: [ {modeIdx, modeName, difficulty, score, attempted, skipped, avgTime, bestTime, accuracy, ts} ] }
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem('sig_history') || '{"sessions":[]}'); }
+  catch(e) { return {sessions:[]}; }
+}
+function saveHistory(h) {
+  try { localStorage.setItem('sig_history', JSON.stringify(h)); } catch(e) {}
+}
+let history = loadHistory();
+
+// ══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function showMainScreen(id) {
+  // Hide all main screens (not game/results/mixed)
+  ['menu','perf'].forEach(s => {
+    document.getElementById('screen-'+s).classList.remove('active');
+    document.getElementById('nav-'+s) && document.getElementById('nav-'+s).classList.remove('active');
+  });
+  document.getElementById('screen-mixed').classList.remove('active');
+  document.getElementById('screen-game').classList.remove('active');
+  document.getElementById('screen-results').classList.remove('active');
+
+  document.getElementById('screen-'+id).classList.add('active');
+  if (document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.add('active');
+  activeMainScreen = id;
+
+  if (id === 'perf') buildPerfScreen();
+}
+
+function showScreen(id) {
+  // For overlay screens (game/results/mixed) just toggle those; leave nav intact
+  ['game','results','mixed'].forEach(s => document.getElementById('screen-'+s).classList.remove('active'));
+  if(id==='game'||id==='results'||id==='mixed') {
+    document.getElementById('screen-'+id).classList.add('active');
+    if(id==='mixed') buildMixed();
+  } else {
+    showMainScreen(id);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BUILD MENU
+// ══════════════════════════════════════════════════════════════
+function buildMenu() {
+  const grid = document.getElementById('mode-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const t = MODE_TIERS[i] === 'tier1'
+      ? '<span class="mode-tier tier1">T1</span>'
+      : '<span class="mode-tier tier2">T2</span>';
+    grid.innerHTML += `
+      <div class="mode-card" onclick="startGame(${i})">
+        <div class="mode-num">${i+1}</div>
+        <div class="mode-icon">${MODE_ICONS[i]}</div>
+        <div class="mode-info">
+          <div class="mode-name">${MODE_NAMES[i]}</div>
+          <div class="mode-desc">${MODE_DESCS[i]}</div>
+        </div>
+        ${t}
+      </div>`;
+  }
+  grid.innerHTML += `
+    <div class="mode-card mixed" onclick="showScreen('mixed')">
+      <div class="mode-num">M</div>
+      <div class="mode-icon">⚡</div>
+      <div class="mode-info">
+        <div class="mode-name">Mixed Mode</div>
+        <div class="mode-desc">Choose your categories</div>
+      </div>
+      <span class="mode-tier tier1" style="background:rgba(245,166,35,0.18)">MIX</span>
+    </div>`;
+}
+
+function buildMixed() {
+  const list = document.getElementById('mixed-list');
+  list.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const sel = mixSelected.includes(i);
+    list.innerHTML += `
+      <div class="mixed-item ${sel?'selected':''}" id="mix-item-${i}" onclick="toggleMix(${i})">
+        <div class="mixed-check" id="mix-chk-${i}">${sel?'✓':'○'}</div>
+        <div class="mode-icon">${MODE_ICONS[i]}</div>
+        <div class="mode-info">
+          <div class="mode-name">${MODE_NAMES[i]}</div>
+          <div class="mode-desc">${MODE_DESCS[i]}</div>
+        </div>
+      </div>`;
+  }
+  updateMixedBtn();
+}
+
+function toggleMix(i) {
+  const idx = mixSelected.indexOf(i);
+  if (idx > -1) { mixSelected.splice(idx,1); document.getElementById('mix-item-'+i).classList.remove('selected'); document.getElementById('mix-chk-'+i).textContent='○'; }
+  else { mixSelected.push(i); document.getElementById('mix-item-'+i).classList.add('selected'); document.getElementById('mix-chk-'+i).textContent='✓'; }
+  updateMixedBtn();
+}
+
+function updateMixedBtn() {
+  const btn = document.getElementById('mixed-start-btn');
+  btn.disabled = mixSelected.length === 0;
+  btn.textContent = mixSelected.length > 0 ? `START MIXED (${mixSelected.length} MODES)` : 'SELECT AT LEAST ONE';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PERFORMANCE SCREEN
+// ══════════════════════════════════════════════════════════════
+function buildPerfScreen() {
+  const h = history;
+  const sessions = h.sessions;
+
+  // Overall stats
+  const totalSessions = sessions.length;
+  const allCorrect = sessions.reduce((a,s)=>a+s.score,0);
+  const allAttempted = sessions.reduce((a,s)=>a+s.attempted,0);
+  const allTimes = sessions.filter(s=>s.avgTime>0).map(s=>s.avgTime);
+  const overallAcc = allAttempted>0 ? Math.round(allCorrect/allAttempted*100)+'%' : '—';
+  const overallAvg = allTimes.length>0 ? (allTimes.reduce((a,b)=>a+b,0)/allTimes.length).toFixed(1)+'s' : '—';
+
+  document.getElementById('ov-sessions').textContent = totalSessions;
+  document.getElementById('ov-acc').textContent = overallAcc;
+  document.getElementById('ov-avg').textContent = overallAvg;
+
+  // Build tabs: one per mode that has data, plus "Mixed"
+  const modesWithData = new Set();
+  sessions.forEach(s => {
+    if (Array.isArray(s.modeIdx)) modesWithData.add('mixed');
+    else modesWithData.add(s.modeIdx);
+  });
+
+  const tabsEl = document.getElementById('perf-tabs');
+  tabsEl.innerHTML = '';
+
+  // All tab
+  const allBtn = document.createElement('button');
+  allBtn.className = 'perf-tab' + (activePerfTab === 'all' ? ' active' : '');
+  allBtn.textContent = 'ALL';
+  allBtn.onclick = () => { activePerfTab = 'all'; buildPerfScreen(); };
+  tabsEl.appendChild(allBtn);
+
+  // Mode tabs
+  for (let i = 0; i < 8; i++) {
+    if (!modesWithData.has(i)) continue;
+    const btn = document.createElement('button');
+    btn.className = 'perf-tab' + (activePerfTab === i ? ' active' : '');
+    btn.textContent = MODE_ICONS[i] + ' ' + MODE_NAMES[i].split(' ')[0];
+    btn.onclick = () => { activePerfTab = i; buildPerfScreen(); };
+    tabsEl.appendChild(btn);
+  }
+  if (modesWithData.has('mixed')) {
+    const btn = document.createElement('button');
+    btn.className = 'perf-tab' + (activePerfTab === 'mixed' ? ' active' : '');
+    btn.textContent = '⚡ MIXED';
+    btn.onclick = () => { activePerfTab = 'mixed'; buildPerfScreen(); };
+    tabsEl.appendChild(btn);
+  }
+
+  // If no data at all
+  if (sessions.length === 0) {
+    document.getElementById('perf-detail').innerHTML = `
+      <div class="perf-no-data">
+        <div class="perf-no-data-icon">📊</div>
+        <div class="perf-no-data-text">NO DATA YET<br>Complete a session to see your stats</div>
+      </div>`;
+    return;
+  }
+
+  // Default tab if activePerfTab not set or has no data
+  if (activePerfTab === 0 && !modesWithData.has(0)) {
+    activePerfTab = modesWithData.values().next().value;
+  }
+
+  // Filter sessions for selected tab
+  let filtered;
+  if (activePerfTab === 'all') {
+    filtered = sessions;
+  } else if (activePerfTab === 'mixed') {
+    filtered = sessions.filter(s => Array.isArray(s.modeIdx));
+  } else {
+    filtered = sessions.filter(s => s.modeIdx === activePerfTab);
+  }
+
+  if (filtered.length === 0) {
+    document.getElementById('perf-detail').innerHTML = `
+      <div class="perf-no-data">
+        <div class="perf-no-data-icon">📊</div>
+        <div class="perf-no-data-text">NO DATA FOR THIS CATEGORY<br>Play this mode to see stats</div>
+      </div>`;
+    return;
+  }
+
+  buildPerfDetail(filtered);
+}
+
+function buildPerfDetail(sessions) {
+  const el = document.getElementById('perf-detail');
+
+  // Aggregate stats
+  const scores = sessions.map(s=>s.score);
+  const accs = sessions.map(s=>s.accuracy);
+  const avgTimes = sessions.filter(s=>s.avgTime>0).map(s=>s.avgTime);
+
+  const bestScore = Math.max(...scores);
+  const avgScore = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+  const avgAcc = accs.length>0 ? Math.round(accs.reduce((a,b)=>a+b,0)/accs.length)+'%' : '—';
+  const avgAvgTime = avgTimes.length>0 ? (avgTimes.reduce((a,b)=>a+b,0)/avgTimes.length).toFixed(1)+'s' : '—';
+  const bestTimeAll = sessions.filter(s=>s.bestTime>0).map(s=>s.bestTime);
+  const bestTimeVal = bestTimeAll.length>0 ? Math.min(...bestTimeAll).toFixed(1)+'s' : '—';
+
+  // Personal bests strip
+  const pbHtml = `
+    <div class="pb-strip">
+      <div class="pb-strip-title">⭐ PERSONAL BESTS</div>
+      <div class="pb-row">
+        <div class="pb-item"><div class="pb-val">${bestScore}</div><div class="pb-lbl">BEST SCORE</div></div>
+        <div class="pb-item"><div class="pb-val">${avgScore}</div><div class="pb-lbl">AVG SCORE</div></div>
+        <div class="pb-item"><div class="pb-val">${bestTimeVal}</div><div class="pb-lbl">BEST TIME</div></div>
+        <div class="pb-item"><div class="pb-val">${sessions.length}</div><div class="pb-lbl">SESSIONS</div></div>
+      </div>
+    </div>`;
+
+  // Stats cards
+  const statsHtml = `
+    <div class="perf-stats-row">
+      <div class="perf-stat-card"><div class="perf-stat-val">${avgAcc}</div><div class="perf-stat-lbl">AVG ACC</div></div>
+      <div class="perf-stat-card"><div class="perf-stat-val">${avgAvgTime}</div><div class="perf-stat-lbl">AVG TIME</div></div>
+      <div class="perf-stat-card"><div class="perf-stat-val">${avgScore}</div><div class="perf-stat-lbl">AVG SCORE</div></div>
+      <div class="perf-stat-card"><div class="perf-stat-val">${bestScore}</div><div class="perf-stat-lbl">BEST</div></div>
+    </div>`;
+
+  // Chart (last 10 sessions)
+  const chartHtml = buildChart(sessions.slice(-10));
+
+  // History table (most recent first, last 20)
+  const recent = [...sessions].reverse().slice(0, 20);
+  let tableRows = recent.map((s, idx) => {
+    const num = sessions.length - idx;
+    const diffCls = s.difficulty === 'easy' ? 'diff-easy' : s.difficulty === 'medium' ? 'diff-medium' : 'diff-hard';
+    const timeStr = s.avgTime > 0 ? s.avgTime.toFixed(1)+'s' : '—';
+    const accStr = s.accuracy + '%';
+    return `<div class="history-row">
+      <div class="history-cell">#${num}</div>
+      <div class="history-score">${s.score}<span style="font-size:9px;color:var(--text3);font-weight:400"> ✓</span></div>
+      <div class="history-cell">${accStr}</div>
+      <div class="history-cell">${timeStr}</div>
+      <div class="history-cell"><span class="diff-badge ${diffCls}">${s.difficulty.toUpperCase().slice(0,1)}</span></div>
+    </div>`;
+  }).join('');
+
+  const tableHtml = `
+    <div class="history-wrap">
+      <div class="history-header">
+        <div class="history-col-hdr">#</div>
+        <div class="history-col-hdr">SCORE</div>
+        <div class="history-col-hdr">ACC</div>
+        <div class="history-col-hdr">TIME</div>
+        <div class="history-col-hdr">DIFF</div>
+      </div>
+      ${tableRows}
+    </div>`;
+
+  el.innerHTML = pbHtml + statsHtml + chartHtml + tableHtml;
+}
+
+function buildChart(sessions) {
+  if (sessions.length < 2) return '';
+  const w = 320, h = 90, pad = 4;
+  const scores = sessions.map(s=>s.score);
+  const accs = sessions.map(s=>s.accuracy);
+  const n = sessions.length;
+
+  const maxScore = Math.max(...scores, 1);
+  const minScore = Math.min(...scores);
+
+  // Normalise scores to chart height
+  function xPos(i) { return pad + (i / (n-1)) * (w - pad*2); }
+  function yScore(v) { return h - pad - ((v - 0) / (maxScore + 2)) * (h - pad*2); }
+  function yAcc(v) { return h - pad - (v / 100) * (h - pad*2); }
+
+  // Score line
+  let scorePath = scores.map((v,i) => `${i===0?'M':'L'}${xPos(i).toFixed(1)},${yScore(v).toFixed(1)}`).join(' ');
+  let accPath = accs.map((v,i) => `${i===0?'M':'L'}${xPos(i).toFixed(1)},${yAcc(v).toFixed(1)}`).join(' ');
+
+  // Area under score
+  const areaScore = scorePath + ` L${xPos(n-1).toFixed(1)},${h} L${xPos(0).toFixed(1)},${h} Z`;
+
+  // Dots for scores
+  const dots = scores.map((v,i) => `<circle cx="${xPos(i).toFixed(1)}" cy="${yScore(v).toFixed(1)}" r="3" fill="var(--amber)"/>`).join('');
+  // Score labels on dots
+  const labels = scores.map((v,i) => {
+    const x = xPos(i).toFixed(1);
+    const y = (yScore(v) - 6).toFixed(1);
+    return `<text x="${x}" y="${y}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="8" fill="var(--amber)">${v}</text>`;
+  }).join('');
+
+  // X axis labels (session numbers)
+  const xLabels = sessions.map((s,i) => {
+    const x = xPos(i).toFixed(1);
+    return `<text x="${x}" y="${h+12}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="7.5" fill="var(--text3)">${sessions.length <= 5 ? i+1 : (i % 2 === 0 ? i+1 : '')}</text>`;
+  }).join('');
+
+  // Grid lines
+  const gridVals = [0, Math.round(maxScore/2), maxScore];
+  const gridLines = gridVals.map(v => {
+    const y = yScore(v).toFixed(1);
+    return `<line x1="${pad}" y1="${y}" x2="${w-pad}" y2="${y}" stroke="var(--border)" stroke-dasharray="3,3"/>
+    <text x="${pad-2}" y="${(parseFloat(y)+3).toFixed(1)}" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="7" fill="var(--text3)">${v}</text>`;
+  }).join('');
+
+  return `
+    <div class="chart-wrap">
+      <div class="chart-title">SCORE HISTORY (LAST ${sessions.length} SESSIONS)</div>
+      <div class="chart-area">
+        <svg class="chart-svg" viewBox="0 0 ${w} ${h+16}" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--amber)" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="var(--amber)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          ${gridLines}
+          <path d="${areaScore}" fill="url(#scoreGrad)"/>
+          <path d="${scorePath}" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path d="${accPath}" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-dasharray="4,3" stroke-linejoin="round" stroke-linecap="round" opacity="0.6"/>
+          ${dots}
+          ${labels}
+          ${xLabels}
+        </svg>
+      </div>
+      <div class="chart-legend">
+        <div class="chart-legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Score (correct/2min)</div>
+        <div class="chart-legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Accuracy %</div>
+      </div>
+    </div>`;
+}
+
+function clearAllStats() {
+  if (!confirm('Clear all performance history?')) return;
+  history = {sessions:[]};
+  saveHistory(history);
+  activePerfTab = 'all';
+  buildPerfScreen();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DIFFICULTY
+// ══════════════════════════════════════════════════════════════
+function setDiff(btn, d) {
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  difficulty = d;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  QUESTION GENERATORS
+// ══════════════════════════════════════════════════════════════
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rItem(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ── MODE 0: Fraction → Percentage ──
+const FRACTIONS_EASY = [[1,2],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[1,8],[3,8],[5,8],[7,8],[1,10],[3,10],[7,10],[9,10],[1,3],[2,3],[1,6],[5,6]];
+const FRACTIONS_MEDIUM = [[1,16],[3,16],[5,16],[7,16],[9,16],[11,16],[13,16],[15,16],[1,12],[5,12],[7,12],[11,12],[1,9],[2,9],[4,9],[5,9],[7,9],[8,9],[1,7],[2,7],[3,7],[4,7],[5,7],[6,7],[3,20],[7,20],[11,20],[13,20],[17,20],[19,20]];
+const FRACTIONS_HARD = [[1,24],[5,24],[7,24],[11,24],[13,24],[17,24],[19,24],[23,24],[3,32],[5,32],[7,32],[9,32],[15,32],[17,32],[21,32],[25,32],[1,15],[2,15],[4,15],[7,15],[8,15],[11,15],[13,15],[14,15],[2,11],[3,11],[5,11],[7,11],[9,11],[3,14],[5,14],[9,14]];
+
+function genFraction() {
+  let pool;
+  if (difficulty==='easy') pool=FRACTIONS_EASY;
+  else if (difficulty==='medium') pool=[...FRACTIONS_EASY,...FRACTIONS_MEDIUM];
+  else pool=[...FRACTIONS_MEDIUM,...FRACTIONS_HARD];
+  const [n,d]=rItem(pool);
+  const ans=roundTo1((n/d)*100);
+  return {question:`${n} / ${d}`,sub:'Express as a percentage',answer:ans,unit:'%',display:`${ans}%`};
+}
+
+// ── MODE 1: % → Fraction ──
+const PCT_TO_FRAC_EASY = [[1,2,'1/2'],[1,4,'1/4'],[3,4,'3/4'],[1,5,'1/5'],[2,5,'2/5'],[3,5,'3/5'],[4,5,'4/5'],[1,8,'1/8'],[3,8,'3/8'],[5,8,'5/8'],[7,8,'7/8'],[1,10,'1/10'],[3,10,'3/10'],[7,10,'7/10'],[9,10,'9/10'],[1,3,'1/3'],[2,3,'2/3'],[1,6,'1/6'],[5,6,'5/6']];
+const PCT_TO_FRAC_MEDIUM = [[1,16,'1/16'],[3,16,'3/16'],[5,16,'5/16'],[7,16,'7/16'],[9,16,'9/16'],[11,16,'11/16'],[13,16,'13/16'],[15,16,'15/16'],[1,12,'1/12'],[5,12,'5/12'],[7,12,'7/12'],[11,12,'11/12'],[1,9,'1/9'],[2,9,'2/9'],[4,9,'4/9'],[5,9,'5/9'],[7,9,'7/9'],[8,9,'8/9'],[3,20,'3/20'],[7,20,'7/20'],[11,20,'11/20'],[13,20,'13/20'],[17,20,'17/20'],[19,20,'19/20']];
+const PCT_TO_FRAC_HARD = [[1,7,'1/7'],[2,7,'2/7'],[3,7,'3/7'],[4,7,'4/7'],[5,7,'5/7'],[6,7,'6/7'],[1,11,'1/11'],[2,11,'2/11'],[3,11,'3/11'],[5,11,'5/11'],[7,11,'7/11'],[9,11,'9/11'],[1,15,'1/15'],[2,15,'2/15'],[4,15,'4/15'],[7,15,'7/15'],[8,15,'8/15'],[11,15,'11/15'],[13,15,'13/15'],[14,15,'14/15'],[3,32,'3/32'],[5,32,'5/32'],[7,32,'7/32'],[9,32,'9/32'],[15,32,'15/32'],[17,32,'17/32']];
+
+function genPctToFrac() {
+  let pool;
+  if (difficulty==='easy') pool=PCT_TO_FRAC_EASY;
+  else if (difficulty==='medium') pool=[...PCT_TO_FRAC_EASY,...PCT_TO_FRAC_MEDIUM];
+  else pool=[...PCT_TO_FRAC_MEDIUM,...PCT_TO_FRAC_HARD];
+  const [n,d,disp]=rItem(pool);
+  const pct=roundTo1((n/d)*100);
+  return {question:`${pct}%`,sub:'Express as a fraction (e.g. 3/8)',answer:n/d,answerFrac:[n,d],display:disp,isFrac:true};
+}
+
+// ── MODE 2: Decimal Multiplication ──
+const BASE_NUMS_EASY=[10,20,25,40,50,80,100,120,150,200,250,400,500];
+const BASE_NUMS_MED=[15,24,32,45,60,75,90,110,125,160,175,225,300,350,450,600];
+const BASE_NUMS_HARD=[12,18,36,42,48,56,64,72,84,96,112,132,144,168,192,216,240,288,360,420,480,540,720];
+const MULTS_EASY=[1.1,1.2,1.25,1.5,0.5,0.75,0.8,0.9,2.0,0.25];
+const MULTS_MED=[1.05,1.07,1.08,1.12,1.15,1.18,1.3,1.4,0.85,0.9,0.92,0.93,0.95,1.6,1.75,2.5];
+const MULTS_HARD=[1.03,1.04,1.06,1.09,1.11,1.13,1.16,1.17,1.19,1.21,1.22,0.83,0.87,0.88,0.78,0.82,1.35,1.45,1.55,1.65,1.85,2.2,2.4,2.8,3.5,4.5];
+
+function genDecMult() {
+  let bases,mults;
+  if (difficulty==='easy'){bases=BASE_NUMS_EASY;mults=MULTS_EASY;}
+  else if (difficulty==='medium'){bases=[...BASE_NUMS_EASY,...BASE_NUMS_MED];mults=[...MULTS_EASY,...MULTS_MED];}
+  else{bases=[...BASE_NUMS_MED,...BASE_NUMS_HARD];mults=[...MULTS_MED,...MULTS_HARD];}
+  const b=rItem(bases),m=rItem(mults);
+  const ans=roundTo1(b*m);
+  return {question:`${m} × ${b}`,sub:'',answer:ans,display:`${ans}`};
+}
+
+// ── MODE 3: Percentage Arithmetic ──
+const PCT_BASES_EASY=[20,25,40,50,60,80,100,120,150,200,250];
+const PCT_BASES_MED=[15,24,36,45,75,90,110,125,160,180,220,300];
+const PCT_BASES_HARD=[12,18,32,42,56,64,72,84,96,112,132,144,168,192,240,288,360];
+const PCT_VALS_EASY=[5,10,15,20,25,50,75];
+const PCT_VALS_MED=[7,8,12,18,30,35,40,45,60,65,70];
+const PCT_VALS_HARD=[3,4,6,9,11,13,14,16,17,19,22,23,27,28,33,37,42,47,55,62,67,72,77,83,88,92,97];
+
+function genPctArith() {
+  let bases,pcts;
+  if (difficulty==='easy'){bases=PCT_BASES_EASY;pcts=PCT_VALS_EASY;}
+  else if (difficulty==='medium'){bases=[...PCT_BASES_EASY,...PCT_BASES_MED];pcts=[...PCT_VALS_EASY,...PCT_VALS_MED];}
+  else{bases=[...PCT_BASES_MED,...PCT_BASES_HARD];pcts=[...PCT_VALS_EASY,...PCT_VALS_MED,...PCT_VALS_HARD];}
+  const b=rItem(bases),p=rItem(pcts),type=rItem(['of','increase','decrease']);
+  let q,ans;
+  if(type==='of'){ans=roundTo1(b*p/100);q=`${p}% of ${b}`;}
+  else if(type==='increase'){ans=roundTo1(b*(1+p/100));q=`${b} + ${p}%`;}
+  else{ans=roundTo1(b*(1-p/100));q=`${b} − ${p}%`;}
+  return {question:q,sub:'',answer:ans,display:`${ans}`};
+}
+
+// ── MODE 4: Ratio / Break-even ──
+const RISK_EASY=[[30,70],[40,60],[25,75],[50,50],[20,80],[60,90],[50,100]];
+const RISK_MED=[[35,65],[45,90],[30,45],[40,100],[60,80],[75,125],[80,120],[45,55],[30,60],[100,150]];
+const RISK_HARD=[[35,55],[42,63],[18,30],[55,88],[70,105],[45,72],[80,136],[100,180],[65,117],[90,150],[28,45],[55,110],[75,100],[120,168],[85,119]];
+
+function genRatio() {
+  let pool;
+  if(difficulty==='easy')pool=RISK_EASY;
+  else if(difficulty==='medium')pool=[...RISK_EASY,...RISK_MED];
+  else pool=[...RISK_MED,...RISK_HARD];
+  const[risk,win]=rItem(pool);
+  const ans=roundTo1((risk/(risk+win))*100);
+  return {question:`Risk ${risk}, Win ${win}`,sub:'Break-even probability (%)',answer:ans,unit:'%',display:`${ans}%`};
+}
+
+// ── MODE 5: Expected Value ──
+const EV_ALL=[
+  {p1:60,p2:40,v1:10,v2:5},{p1:70,p2:30,v1:20,v2:10},{p1:50,p2:50,v1:15,v2:5},
+  {p1:80,p2:20,v1:10,v2:20},{p1:60,p2:40,v1:30,v2:15},{p1:75,p2:25,v1:12,v2:8},
+  {p1:65,p2:35,v1:18,v2:8},{p1:55,p2:45,v1:25,v2:12},{p1:72,p2:28,v1:14,v2:7},
+  {p1:45,p2:55,v1:40,v2:20},{p1:62,p2:38,v1:16,v2:9},{p1:58,p2:42,v1:22,v2:14},
+  {p1:68,p2:32,v1:30,v2:18},{p1:77,p2:23,v1:13,v2:6},{p1:48,p2:52,v1:35,v2:25},
+  {p1:63,p2:37,v1:17,v2:11},{p1:57,p2:43,v1:23,v2:9},{p1:73,p2:27,v1:11,v2:14},
+  {p1:66,p2:34,v1:19,v2:13},{p1:78,p2:22,v1:9,v2:16}
+];
+function genEV() {
+  const pool=difficulty==='easy'?EV_ALL.slice(0,6):difficulty==='medium'?EV_ALL.slice(0,15):EV_ALL;
+  const{p1,p2,v1,v2}=rItem(pool);
+  const ev=roundTo1((p1/100)*v1-(p2/100)*v2);
+  return {question:`${p1}%×${v1} − ${p2}%×${v2}`,sub:'Expected value (EV)',answer:ev,display:`${ev}`};
+}
+
+// ── MODE 6: Weighted Averages ──
+const WA_ALL=[
+  {p1:80,p2:20,v1:100,v2:50},{p1:70,p2:30,v1:120,v2:60},{p1:60,p2:40,v1:200,v2:100},
+  {p1:75,p2:25,v1:80,v2:40},{p1:50,p2:50,v1:150,v2:90},{p1:90,p2:10,v1:100,v2:30},
+  {p1:65,p2:35,v1:140,v2:80},{p1:55,p2:45,v1:180,v2:120},{p1:72,p2:28,v1:250,v2:100},
+  {p1:45,p2:55,v1:160,v2:80},{p1:62,p2:38,v1:300,v2:150},{p1:85,p2:15,v1:120,v2:40},
+  {p1:63,p2:37,v1:170,v2:110},{p1:57,p2:43,v1:230,v2:130},{p1:73,p2:27,v1:280,v2:120},
+  {p1:66,p2:34,v1:190,v2:70},{p1:78,p2:22,v1:110,v2:50},{p1:71,p2:29,v1:150,v2:90}
+];
+function genWA() {
+  const pool=difficulty==='easy'?WA_ALL.slice(0,6):difficulty==='medium'?WA_ALL.slice(0,12):WA_ALL;
+  const{p1,p2,v1,v2}=rItem(pool);
+  const wa=roundTo1((p1/100)*v1+(p2/100)*v2);
+  return {question:`${p1}%×${v1} + ${p2}%×${v2}`,sub:'Weighted average (fair value)',answer:wa,display:`${wa}`};
+}
+
+// ── MODE 7: Weird Division ──
+const DIV_DIVIDENDS_EASY=[50,75,90,100,120,150,175,200,225,250,300,350,400,450,500];
+const DIV_DIVIDENDS_MED=[63,84,105,126,147,168,189,210,231,252,273,315,336,357,378,420,441,462,483,525,546,567,630,672,735,756,840];
+const DIV_DIVIDENDS_HARD=[91,119,133,154,182,196,203,217,238,259,266,287,308,322,343,364,385,406,427,448,469,490,511,532,553,574,595,616,637,658,679,700];
+const DIV_DIVISORS_EASY=[4,5,8,10];
+const DIV_DIVISORS_MED=[6,7,8,9,12,15];
+const DIV_DIVISORS_HARD=[6,7,8,9,11,12,13,14,16,17,18,19];
+
+function genWeirdDiv() {
+  let dividends,divisors;
+  if(difficulty==='easy'){dividends=DIV_DIVIDENDS_EASY;divisors=DIV_DIVISORS_EASY;}
+  else if(difficulty==='medium'){dividends=[...DIV_DIVIDENDS_EASY,...DIV_DIVIDENDS_MED];divisors=[...DIV_DIVISORS_EASY,...DIV_DIVISORS_MED];}
+  else{dividends=[...DIV_DIVIDENDS_MED,...DIV_DIVIDENDS_HARD];divisors=[...DIV_DIVISORS_MED,...DIV_DIVISORS_HARD];}
+  const a=rItem(dividends),b=rItem(divisors);
+  const ans=roundTo1(a/b);
+  return {question:`${a} ÷ ${b}`,sub:'1 decimal place',answer:ans,display:`${ans}`};
+}
+
+const GENERATORS=[genFraction,genPctToFrac,genDecMult,genPctArith,genRatio,genEV,genWA,genWeirdDiv];
+
+function roundTo1(n) {
+  const r2=Math.round(n*100)/100;
+  const frac=Math.round((r2%1)*100);
+  if(frac===25||frac===75||frac===125||frac===625||frac===875||frac===375) return r2;
+  return Math.round(n*10)/10;
+}
+
+function checkAnswer(userStr,correctAns,isFrac) {
+  const s=userStr.replace(',','.').trim();
+  if(!s) return false;
+  if(s.includes('/')) {
+    const parts=s.split('/');
+    if(parts.length===2){const n=parseFloat(parts[0]),d=parseFloat(parts[1]);if(!isNaN(n)&&!isNaN(d)&&d!==0)return Math.abs(n/d-correctAns)<0.0051;}
+    return false;
+  }
+  const u=parseFloat(s);
+  if(isNaN(u)) return false;
+  return Math.abs(u-correctAns)<0.051;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GAME
+// ══════════════════════════════════════════════════════════════
+function startGame(modeIdx) {
+  currentMode=modeIdx; lastGameMode=modeIdx; lastGameModes=null;
+  initGame();
+}
+function startMixedGame() {
+  if(mixSelected.length===0) return;
+  currentMode=[...mixSelected]; lastGameMode=null; lastGameModes=[...mixSelected];
+  initGame();
+}
+
+function initGame() {
+  score=0; questionsAsked=0; skipped=0; responseTimes=[]; answered=false; shownAnswer=false; timeLeft=120; gameActive=true;
+  document.getElementById('score-num').textContent='0';
+  document.getElementById('timer-num').textContent='2:00';
+  document.getElementById('timer-bar').style.width='100%';
+  document.getElementById('timer-num').classList.remove('urgent');
+  document.getElementById('timer-bar').classList.remove('urgent');
+  document.getElementById('feedback-text').textContent='';
+  document.getElementById('feedback-text').className='feedback-text';
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('game-mode-tag').textContent=Array.isArray(currentMode)?'MIXED MODE':MODE_NAMES[currentMode];
+  showScreen('game');
+  nextQuestion();
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    const m=Math.floor(timeLeft/60),s=timeLeft%60;
+    document.getElementById('timer-num').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+    document.getElementById('timer-bar').style.width=(timeLeft/120*100)+'%';
+    if(timeLeft<=20){document.getElementById('timer-num').classList.add('urgent');document.getElementById('timer-bar').classList.add('urgent');}
+    if(timeLeft<=0) endGame(false);
+  },1000);
+}
+
+function nextQuestion() {
+  answered=false; shownAnswer=false;
+  questionStartTime=Date.now();
+  const inp=document.getElementById('answer-input');
+  inp.value=''; inp.className='answer-input'; inp.focus();
+  document.getElementById('feedback-text').textContent='';
+  document.getElementById('feedback-text').className='feedback-text';
+  document.getElementById('next-btn').style.display='none';
+  const modeIdx=Array.isArray(currentMode)?rItem(currentMode):currentMode;
+  currentQ=GENERATORS[modeIdx]();
+  currentQ.modeIdx=modeIdx;
+  questionsAsked++;
+  document.getElementById('question-text').textContent=currentQ.question;
+  document.getElementById('question-sub').textContent=currentQ.sub||'';
+  document.getElementById('q-counter').textContent=`Q${questionsAsked}`;
+  const dotBtn=document.getElementById('np-dot-btn');
+  if(dotBtn) dotBtn.textContent=currentQ.isFrac?'/':'.';
+}
+
+function handleInput() {
+  if(!gameActive||answered) return;
+  const val=document.getElementById('answer-input').value.trim();
+  if(!val) return;
+  if(currentQ&&currentQ.isFrac){
+    if(!val.includes('/')) return;
+    const parts=val.split('/');
+    if(parts.length!==2||!parts[0]||!parts[1]) return;
+  }
+  if(checkAnswer(val,currentQ.answer,currentQ&&currentQ.isFrac)) submitAnswer();
+}
+
+function handleKey(e) { if(e.key==='Enter') submitAnswer(); }
+
+function np(char) {
+  if(answered&&!shownAnswer) return;
+  const inp=document.getElementById('answer-input');
+  if(char==='.'){
+    if(currentQ&&currentQ.isFrac){if(inp.value.includes('/'))return;inp.value+='/';}
+    else{if(inp.value.includes('.'))return;inp.value+='.';}
+  } else { inp.value+=char; }
+  inp.focus(); handleInput();
+}
+function npDel() { const inp=document.getElementById('answer-input'); inp.value=inp.value.slice(0,-1); inp.focus(); }
+
+function submitAnswer() {
+  if(!gameActive) return;
+  if(answered&&shownAnswer){nextQuestion();return;}
+  const inp=document.getElementById('answer-input');
+  const val=inp.value.trim();
+  if(!val) return;
+  const correct=checkAnswer(val,currentQ.answer,currentQ&&currentQ.isFrac);
+  const elapsed=(Date.now()-questionStartTime)/1000;
+  if(correct){
+    answered=true; score++; responseTimes.push(elapsed);
+    inp.className='answer-input correct';
+    setFeedback('✓ CORRECT','correct');
+    document.getElementById('score-num').textContent=score;
+    document.getElementById('score-num').parentElement.classList.add('pop');
+    setTimeout(()=>document.getElementById('score-num').parentElement.classList.remove('pop'),250);
+    setTimeout(()=>{ if(gameActive) nextQuestion(); },600);
+  } else {
+    inp.className='answer-input wrong';
+    setFeedback('✗ TRY AGAIN','wrong');
+    setTimeout(()=>{inp.value='';inp.className='answer-input';setFeedback('','');},500);
+  }
+}
+
+function showAnswer() {
+  if(!gameActive) return;
+  shownAnswer=true; answered=true; skipped++;
+  const inp=document.getElementById('answer-input');
+  inp.value=String(currentQ.display); inp.className='answer-input';
+  setFeedback(`Answer: ${currentQ.display}`,'wrong');
+  document.getElementById('next-btn').style.display='block';
+}
+
+function setFeedback(msg,cls) {
+  const el=document.getElementById('feedback-text');
+  el.textContent=msg;
+  el.className='feedback-text'+(cls?' '+cls:'');
+}
+
+function navTo(id) {
+  if(gameActive){if(!confirm('End current game?'))return;endGame(true);}
+  showMainScreen(id);
+}
+
+function confirmBack() {
+  if(gameActive){
+    if(!confirm('End current game?')) return;
+    clearInterval(timerInterval);
+    gameActive=false;
+  }
+  document.getElementById('screen-game').classList.remove('active');
+  showMainScreen('menu');
+}
+
+function endGame(abort) {
+  clearInterval(timerInterval);
+  gameActive=false;
+  if(abort) return;
+
+  const acc=questionsAsked>0?Math.round((score/questionsAsked)*100):0;
+  const avgTime=responseTimes.length>0?(responseTimes.reduce((a,b)=>a+b,0)/responseTimes.length):0;
+  const bestTime=responseTimes.length>0?Math.min(...responseTimes):0;
+
+  // Save session to history
+  const session={
+    modeIdx: Array.isArray(currentMode)?[...currentMode]:currentMode,
+    modeName: Array.isArray(currentMode)?'Mixed':MODE_NAMES[currentMode],
+    difficulty,
+    score,
+    attempted: questionsAsked,
+    skipped,
+    accuracy: acc,
+    avgTime: parseFloat(avgTime.toFixed(2)),
+    bestTime: parseFloat(bestTime.toFixed(2)),
+    ts: Date.now()
+  };
+  history.sessions.push(session);
+  // Cap at 200 sessions
+  if(history.sessions.length>200) history.sessions=history.sessions.slice(-200);
+  saveHistory(history);
+
+  // Show results screen
+  document.getElementById('res-score').innerHTML=`${score} <span>correct</span>`;
+  document.getElementById('res-meta').textContent=`${questionsAsked} attempted · ${difficulty.toUpperCase()} · 2:00`;
+  document.getElementById('res-acc').textContent=acc+'%';
+  document.getElementById('res-avg').textContent=avgTime>0?avgTime.toFixed(1)+'s':'—';
+  document.getElementById('res-skipped').textContent=skipped;
+  document.getElementById('res-best').textContent=bestTime>0?bestTime.toFixed(1)+'s':'—';
+  showScreen('results');
+}
+
+function playAgain() {
+  if(lastGameModes) currentMode=[...lastGameModes];
+  else if(lastGameMode!==null) currentMode=lastGameMode;
+  initGame();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+buildMenu();
+document.getElementById('answer-input').addEventListener('keyup', e=>{ if(e.key==='Enter') submitAnswer(); });
+
+// Custom numpad submit
+const npSubmit=document.createElement('button');
+npSubmit.className='np-btn submit-np';
+npSubmit.innerHTML='↵';
+npSubmit.style.gridColumn='span 3';
+npSubmit.onclick=submitAnswer;
+document.getElementById('numpad').appendChild(npSubmit);
+</script>
+</body>
+</html>
